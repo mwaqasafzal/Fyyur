@@ -40,8 +40,11 @@ migrate = Migrate(app,db)
 show = db.Table('Show',
                   db.Column('artist_id',db.Integer,db.ForeignKey('Artist.id'),primary_key=True),
                   db.Column('venue_id',db.Integer,db.ForeignKey('Venue.id'),primary_key=True),
-                  db.Column('start_time',db.Date, nullable = False)
+                  db.Column('start_time',db.DateTime, primary_key=True)
                 )
+# insert_stmt = show.insert().values(artist_id=1, venue_id=1, start_time="2020-07-27 16:49:08")
+# db.session.execute(insert_stmt)
+
 
 class Venue(db.Model):
     __tablename__ = 'Venue'
@@ -56,8 +59,9 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
     artists = db.relationship('Artist',secondary = show, backref=db.backref('venues', lazy=True))
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
+    def __repr__(self):
+      return f'<Venue_Id: {self.id}  Name: {self.name} City: {self.city} State: {self.state} Address:{self.address} Phone:{self.phone}>'
+   
 class Artist(db.Model):
     __tablename__ = 'Artist'
 
@@ -69,6 +73,9 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+
+    def __repr__(self):
+        return f'<Artist_Id: {self.id}  Name: {self.name} City: {self.city} State: {self.state} Phone:{self.phone} genres:{self.genres}>'
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -126,7 +133,7 @@ def venues():
       "num_upcoming_shows": 0,
     }]
   }]
-  return render_template('pages/venues.html', areas=data);
+  return render_template('pages/venues.html', areas=data)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
