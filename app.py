@@ -37,12 +37,6 @@ migrate = Migrate(app,db)
 # Models.
 #----------------------------------------------------------------------------#
 
-show = db.Table('Show',
-                  db.Column('artist_id',db.Integer,db.ForeignKey('Artist.id', ondelete="cascade"),primary_key=True),
-                  db.Column('venue_id',db.Integer,db.ForeignKey('Venue.id', ondelete="cascade"),primary_key=True),
-                  db.Column('start_time',db.DateTime, primary_key=True)
-                )
-
 
 class Venue(db.Model):
     __tablename__ = 'Venue'
@@ -56,10 +50,11 @@ class Venue(db.Model):
     phone = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-    artists = db.relationship('Artist',secondary = show, backref=db.backref('venues', lazy=True))
+    shows = db.relationship('Show', backref='venue', lazy=True)
+    
 
     def __repr__(self):
-      return f'<Venue_Id: {self.id}  Name: {self.name} City: {self.city} State: {self.state} Address:{self.address} Phone:{self.phone}>'
+      return f'<Venue_Id: {self.id}  Name: {self.name} City: {self.city} State: {self.state} Address:{self.address} Phone:{self.phone} Venues:{self.venues}>'
    
 class Artist(db.Model):
     __tablename__ = 'Artist'
@@ -72,11 +67,25 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    shows = db.relationship('Show', backref='artist', lazy=True)
    
     def __repr__(self):
-        return f'<Artist_Id: {self.id}  Name: {self.name} City: {self.city} State: {self.state} Phone:{self.phone} genres:{self.genres}>'
+        return f'''<Artist_Id: {self.id}  Name: {self.name} 
+                  City: {self.city} State: {self.state} 
+                  Phone:{self.phone} genres:{self.genres}
+                  venues:{self.venues}>'''
 
 
+class Show(db.Model):
+    __tablename__ = 'Show'
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+      return f'<Show {self.id}, Artist {self.artist_id}, Venue {self.venue_id}>'
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -108,6 +117,7 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+  
   data=[{
     "city": "San Francisco",
     "state": "CA",
@@ -525,12 +535,10 @@ def create_shows():
 def create_show_submission():
  
   try:
-    #as show has Type Table
-    insert_stmt = show.insert().values(artist_id=request.form['artist_id'], 
-                                    venue_id=request.form['venue_id'], 
-                                    start_time=request.form['start_time'])
-
-    db.session.execute(insert_stmt)
+    show = Show()
+    show.artist_id = request.form['artist_id']
+    show.venue_id = request.form['venue_id']
+    db.session.add(show)
     db.session.commit()
     flash('Show was successfully listed!')
   except:
