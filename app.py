@@ -36,10 +36,13 @@ migrate = Migrate(app,db)
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
-
+artist_genre = db.Table('ArtistGenre',
+                  db.Column('artist_id',db.Integer, db.ForeignKey('Artist.id', ondelete="cascade"), primary_key=True),
+                   db.Column('genre_id',db.Integer, db.ForeignKey('Genre.id', ondelete="cascade"), primary_key=True)
+                )
 show = db.Table('Show',
-                  db.Column('artist_id',db.Integer,db.ForeignKey('Artist.id'),primary_key=True),
-                  db.Column('venue_id',db.Integer,db.ForeignKey('Venue.id'),primary_key=True),
+                  db.Column('artist_id',db.Integer,db.ForeignKey('Artist.id', ondelete="cascade"),primary_key=True),
+                  db.Column('venue_id',db.Integer,db.ForeignKey('Venue.id', ondelete="cascade"),primary_key=True),
                   db.Column('start_time',db.DateTime, primary_key=True)
                 )
 # insert_stmt = show.insert().values(artist_id=1, venue_id=1, start_time="2020-07-27 16:49:08")
@@ -50,11 +53,11 @@ class Venue(db.Model):
     __tablename__ = 'Venue'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
+    address = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     artists = db.relationship('Artist',secondary = show, backref=db.backref('venues', lazy=True))
@@ -66,19 +69,22 @@ class Artist(db.Model):
     __tablename__ = 'Artist'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(120), nullable=False)
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    genres = db.relationship('Genre', secondary = artist_genre, backref=db.backref('artists', lazy=True))
 
     def __repr__(self):
         return f'<Artist_Id: {self.id}  Name: {self.name} City: {self.city} State: {self.state} Phone:{self.phone} genres:{self.genres}>'
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
+class Genre(db.Model):
+  __tablename__ = 'Genre'
+  id = db.Column(db.Integer, primary_key=True)
+  name = db.Column(db.String(), nullable=False)
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
